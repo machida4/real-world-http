@@ -2,18 +2,22 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	//"golang.org/x/net/idna"
 	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/textproto"
 	"net/url"
 	"os"
 )
 
 func main() {
-	post_multipart()
+	access_with_cookie()
 }
 
 func get() {
@@ -97,4 +101,37 @@ func post_multipart() {
 		panic(err)
 	}
 	log.Println("Status:", resp.Status)
+}
+
+func access_with_cookie() {
+	// クッキーを保存する瓶のインスタンスを作成
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		panic(err)
+	}
+	client := http.Client{
+		Jar: jar,
+	}
+	// クッキーのテストのため2回通信
+	for i := 0; i < 2; i++ {
+		resp, err := client.Get("http://localhost:18888/cookie")
+		if err != nil {
+			panic(err)
+		}
+		dump, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			panic(err)
+		}
+		log.Println(string(dump))
+	}
+}
+
+// 国際化ドメイン
+func i18n() {
+	src := "握力王"
+	ascii, err := idna.ToASCII(src)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s -> %s\n", src, ascii)
 }
